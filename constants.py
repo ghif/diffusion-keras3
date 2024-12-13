@@ -3,7 +3,7 @@ EMBEDDING_DIMS = 32
 EMBEDDING_MIN_FREQUENCY = 1.0
 EMBEDDING_MAX_FREQUENCY = 1000.0
 WIDTHS = [32, 64, 96, 128]
-BLOCK_DEPTH = 1 # residual block depth in downsampling and upsampling blocks
+BLOCK_DEPTH = 2 # residual block depth in downsampling and upsampling blocks
 
 # Data
 IMAGE_DIM = 32
@@ -19,7 +19,7 @@ EMA = 0.999
 BATCH_SIZE = 128
 LEARNING_RATE = 1e-3
 WEIGHT_DECAY = 1e-4
-NUM_EPOCHS = 100
+NUM_EPOCHS = 50
 
 # Visualization
 NUM_SAMPLES = 64

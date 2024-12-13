@@ -59,15 +59,18 @@ display_callback = ddim.DisplayCallback(
     checkpoint_dir=checkpoint_dir,
 )
 
+checkpoint_path = os.path.join(checkpoint_dir, "model.keras")
+checkpoint_callback = keras.callbacks.ModelCheckpoint(
+    filepath=checkpoint_path,
+    save_freq="epoch"
+)
+
 diffmodel.fit(
     dataset,
     epochs=const.NUM_EPOCHS,
     # validation_data=val_dataset,
     callbacks=[
-        display_callback
-    ]
-    # callbacks=[
-    #     display_callback, 
-    #     checkpoint_callback,
-    # ],
+        display_callback, 
+        checkpoint_callback,
+    ],
 )
