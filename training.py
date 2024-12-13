@@ -44,6 +44,11 @@ diffmodel.normalizer.adapt(dataset)
 
 # run training and plot generated images periodically
 current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+
+# Check if MODEL_DIR exists, create if not
+if not os.path.exists(const.MODEL_DIR):
+    os.makedirs(const.MODEL_DIR)
+
 checkpoint_dir = os.path.join(const.MODEL_DIR, f"ddim-cifar10-keras-{current_time}")
 
 if not os.path.exists(checkpoint_dir):
