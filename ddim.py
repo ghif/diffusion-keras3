@@ -76,7 +76,7 @@ class DDIM(keras.Model):
         Returns:
             The denormalized images.
         """
-        images = self.normalizer.mean + images + self.normalizer.variance ** 0.5
+        images = self.normalizer.mean + images * self.normalizer.variance ** 0.5
         return ops.clip(images, 0.0, 1.0)
     
     def diffusion_schedule(self, diffusion_times, min_signal_rate, max_signal_rate):

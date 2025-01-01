@@ -10,7 +10,6 @@ import os
 import datetime
 
 
-
 # Load CIFAR-10 dataset
 (X_train, y_train), (X_test, y_test) = keras.datasets.cifar10.load_data()
 image_channel = X_train.shape[-1]
