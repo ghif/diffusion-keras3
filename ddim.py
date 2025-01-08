@@ -113,10 +113,11 @@ class DDIM(keras.Model):
         Returns:
             The denoised images.
         """
-        if training:
-            network = self.network
-        else:
-            network = self.ema_network
+        # if training:
+        #     network = self.network
+        # else:
+        #     network = self.ema_network
+        network = self.network
         
         # Predict noise component and calculate the image component using it
         pred_noises = network([noisy_images, noise_rates], training=training)
@@ -230,9 +231,9 @@ class DDIM(keras.Model):
         self.noise_loss_tracker.update_state(noises, pred_noises)
         self.image_loss_tracker.update_state(images, pred_images)
 
-        # track the exponential moving average of the network weights
-        for weight, ema_weights in zip(self.network.weights, self.ema_network.weights):
-            ema_weights.assign(const.EMA * ema_weights + (1-const.EMA) * weight)
+        # # track the exponential moving average of the network weights
+        # for weight, ema_weights in zip(self.network.weights, self.ema_network.weights):
+        #     ema_weights.assign(const.EMA * ema_weights + (1-const.EMA) * weight)
 
         # KID is not measured during the training phase for computational efficiency
         # return {m.name: m.result() for m in self.metrics[:-1]}
