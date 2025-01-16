@@ -34,7 +34,7 @@ def visualize_imgrid(img_list, title="Untitled", figpath=None, plot_dim=None):
     """
     # plt.figure(figsize=(6, 6))
     # plt.figure(figsize=(6, 6)).suptitle(title, fontsize=18)
-
+    plt.clf()
     n_samples = len(img_list)
     
     if plot_dim is None:
@@ -54,10 +54,8 @@ def visualize_imgrid(img_list, title="Untitled", figpath=None, plot_dim=None):
 
         img = img_list[i]
     
-        print(f"[visualize_imgrid] img shape: {img.shape}")
         vmin = np.min(img)
         vmax = np.max(img)
-        print(vmin, vmax)
         
         plt.imshow(img, vmin=vmin, vmax=vmax)
     

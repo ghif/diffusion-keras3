@@ -41,7 +41,46 @@ def forward_diffusion(diffmodel, xo, noises, steps=5):
 
     return noisy_images_list
 
+def reverse_diffusion(diffmodel, initial_noise, steps=5):
+    """
+    Perform reverse diffusion process to generate images from initial noise.
+    Args:
+        diffmodel (object): The diffusion model used for denoising and scheduling.
+        initial_noise (numpy.ndarray): The initial noise tensor to start the reverse diffusion process.
+        steps (int, optional): The number of reverse diffusion steps. Default is 5.
+    Returns:
+        list: A list of predicted images at each step of the reverse diffusion process.
+    """
+    num_images = initial_noise.shape[0]
+    step_size = 1.0 / steps
 
+    next_noisy_images = initial_noise
+
+    pred_images_list = [diffmodel.denormalize(initial_noise).numpy()[0]]
+    for step in range(steps):
+        noisy_images = next_noisy_images
+        diffusion_times = ops.ones((num_images, 1, 1, 1)) - step * step_size
+        noise_rates, signal_rates = diffmodel.diffusion_schedule(
+            diffusion_times, 
+            const.MIN_SIGNAL_RATE, 
+            const.MAX_SIGNAL_RATE
+        )
+
+        pred_noises, pred_images = diffmodel.denoise(
+            noisy_images, noise_rates, signal_rates, training=False
+        )
+
+        pred_images_list.append(diffmodel.denormalize(pred_images).numpy()[0])
+
+        next_diffusion_times = diffusion_times - step_size
+        next_noise_rates, next_signal_rates = diffmodel.diffusion_schedule(
+            next_diffusion_times,
+            const.MIN_SIGNAL_RATE,
+            const.MAX_SIGNAL_RATE
+        )
+        next_noisy_images = next_signal_rates * pred_images + next_noise_rates * pred_noises
+    
+    return pred_images_list
 
 # Load CIFAR-10 dataset
 (X_train, y_train), (X_test, y_test) = keras.datasets.cifar10.load_data()
@@ -57,47 +96,33 @@ dataset = dataset.shuffle(buffer_size=1024).batch(const.BATCH_SIZE)
 batch_size = 20
 x_batch = x_train[:batch_size]
 
-# Define diffusion model
-diffmodel = ddim.create_model(const.IMAGE_DIM, image_channel, const.WIDTHS, const.BLOCK_DEPTH)
-
-
-diffmodel.normalizer.adapt(dataset)
-
 # normalize images to have standard deviation of 1, like the noises
 batch_size = ops.shape(x_batch)[0]
 image_size = ops.shape(x_batch)[1]
 image_ch = ops.shape(x_batch)[-1]
 
-# noises = keras.random.normal(shape=(batch_size, image_size, image_size, image_ch))
-# noises = np.linspace(0, 1, batch_size * image_size * image_size * image_ch).reshape(batch_size, image_size, image_size, image_ch)
-
-# # sample uniform random diffusion times
-# diffusion_times = keras.random.uniform(
-#     shape=(batch_size, 1, 1, 1), minval=0.0, maxval=1.0
-# )
-
-# noise_rates, signal_rates = diffmodel.diffusion_schedule(diffusion_times, const.MIN_SIGNAL_RATE, const.MAX_SIGNAL_RATE)
-
-# # mix the images with noises accordingly
-# noisy_images = signal_rates * x_batch + noise_rates * noises
-
-# noises = np.random.rand(batch_size, image_size, image_size, image_ch)
-
-# # Forwrad diffusion
-# image = x_batch[11]
-# steps = 5
-# noises = keras.random.normal(shape=(batch_size, image_size, image_size, image_ch))
-# noisy_images_list = forward_diffusion(diffmodel, image, noises, steps=steps)
-# U.visualize_imgrid(noisy_images_list, title="Forward Diffusion", plot_dim=(1, steps+1))
-
 # Load model from .keras checkpoint
+diffmodel = ddim.create_model(const.IMAGE_DIM, image_channel, const.WIDTHS, const.BLOCK_DEPTH)
+diffmodel.normalizer.adapt(dataset)
 diffmodel.build(input_shape=(None, const.IMAGE_DIM, const.IMAGE_DIM, const.IMAGE_CHANNEL))
-checkpoint_dir = os.path.join(const.MODEL_DIR, f"ddim-cifar10-keras-20250116-100337")
+checkpoint_dir = os.path.join(const.MODEL_DIR, f"ddim-cifar10-keras-best")
 checkpoint_path = os.path.join(checkpoint_dir, "ddim_model.weights.h5")
 print(f"Load model from checkpoint: {checkpoint_path}")
 diffmodel.load_weights(checkpoint_path)
 
+# Forwrad diffusion
+print(f"Forward diffusion ...")
+image = x_batch[11]
+forward_steps = 5
+noises = keras.random.normal(shape=(batch_size, image_size, image_size, image_ch))
+noisy_images_list = forward_diffusion(diffmodel, image, noises, steps=forward_steps)
+figpath = os.path.join("images", "forward_diffusion.png")
+U.visualize_imgrid(noisy_images_list, title="Forward Diffusion", plot_dim=(1, forward_steps+1), figpath=figpath)
+
 # Reverse diffusion
-
-diffusion_steps = const.PLOT_DIFFUSION_STEPS
-
+print(f"Reverse diffusion ...")
+reverse_steps = 11
+initial_noise = keras.random.normal(shape=(1, image_size, image_size, image_ch))
+pred_images_list = reverse_diffusion(diffmodel, initial_noise, reverse_steps)
+figpath = os.path.join("images", "reverse_diffusion.png")
+U.visualize_imgrid(pred_images_list, title="Reverse Diffusion", figpath=figpath)
