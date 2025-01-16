@@ -11,6 +11,9 @@ from time import process_time
 
 class DisplayCallback(keras.callbacks.Callback):
     def __init__(self, latent_variable=None, diffusion_steps=5, checkpoint_dir="checkpoints"):
+        """
+        Initialize the display callback.
+        """
         super().__init__()
         self.diffusion_steps = diffusion_steps
         self.train_steps = 0
@@ -25,8 +28,6 @@ class DisplayCallback(keras.callbacks.Callback):
 
     def on_train_batch_end(self, batch, logs=None):
         if self.train_steps % 100 == 0:
-        # if self.train_steps % 2 == 0:
-            # print(f" ... [{self.train_steps}] got log keys: {keys}")
             generated_images = self.model.generate(
                 self.latent_variable,
                 self.diffusion_steps
@@ -55,8 +56,10 @@ class DDIM(keras.Model):
         super().__init__()
         self.normalizer = keras.layers.Normalization()
         self.network = arch.create_unet(image_size, image_channel, widths, block_depth)
-        self.ema_network = arch.create_unet(image_size, image_channel, widths, block_depth)
 
+        # Exponential moving average network for smoother sampling
+        self.ema_network = arch.create_unet(image_size, image_channel, widths, block_depth)
+    
     def compile(self, **kwargs):
         super().compile(**kwargs)
         self.noise_loss_tracker = keras.metrics.MeanAbsoluteError(name="n_loss")
@@ -113,11 +116,10 @@ class DDIM(keras.Model):
         Returns:
             The denoised images.
         """
-        # if training:
-        #     network = self.network
-        # else:
-        #     network = self.ema_network
-        network = self.network
+        if training:
+            network = self.network
+        else:
+            network = self.ema_network
         
         # Predict noise component and calculate the image component using it
         pred_noises = network([noisy_images, noise_rates], training=training)
@@ -153,10 +155,12 @@ class DDIM(keras.Model):
                 const.MIN_SIGNAL_RATE, 
                 const.MAX_SIGNAL_RATE
             )
+
+            # network used in eval mode
             pred_noises, pred_images = self.denoise(
                 noisy_images, noise_rates, signal_rates, training=False
             )
-            # network used in eval mode
+            
 
             # remix the predicted components using the next signal and noise rates
             next_diffusion_times = diffusion_times - step_size
@@ -231,15 +235,27 @@ class DDIM(keras.Model):
         self.noise_loss_tracker.update_state(noises, pred_noises)
         self.image_loss_tracker.update_state(images, pred_images)
 
-        # # track the exponential moving average of the network weights
-        # for weight, ema_weights in zip(self.network.weights, self.ema_network.weights):
-        #     ema_weights.assign(const.EMA * ema_weights + (1-const.EMA) * weight)
+        # track the exponential moving average of the network weights
+        for weight, ema_weights in zip(self.network.weights, self.ema_network.weights):
+            ema_weights.assign(const.EMA * ema_weights + (1-const.EMA) * weight)
 
         # KID is not measured during the training phase for computational efficiency
         # return {m.name: m.result() for m in self.metrics[:-1]}
         return {m.name: m.result() for m in self.metrics}
 
     
+def create_model(image_dim, image_channel, widths, block_depth):
+    diffmodel = DDIM(image_dim, image_channel, widths, block_depth)
+    diffmodel.summary(expand_nested=True)
+
+    loss_fn = keras.losses.MeanAbsoluteError()
+    diffmodel.compile(
+        optimizer=keras.optimizers.AdamW(
+            learning_rate=const.LEARNING_RATE, weight_decay=const.WEIGHT_DECAY
+        ),
+        loss=loss_fn,
+    )
+    return diffmodel
 
 if __name__ == "__main__":
     image_ch = 3
@@ -264,5 +280,3 @@ if __name__ == "__main__":
     pred_images = diffmodel.reverse_diffusion(initial_noise, const.PLOT_DIFFUSION_STEPS)
     elapsed_t = process_time() - start_t
     print(f" -- Elapsed time: {elapsed_t:.2f} secs")
-
-    

@@ -1,3 +1,4 @@
+
 import ddim
 import constants as const
 import utils as U
@@ -18,36 +19,29 @@ image_channel = X_train.shape[-1]
 x_train = U.normalize_batch(X_train, low_s=0, high_s=255, low_t=0, high_t=1)
 
 # Use only a subset of the data
-num_samples = 10000
+# num_samples = 1000
+num_samples = len(x_train)
 x_train = x_train[:num_samples]
 
 # Resize images
 x_train = ops.image.resize(x_train, (const.IMAGE_DIM, const.IMAGE_DIM))
 
+# Constract TF dataset
 dataset = tf.data.Dataset.from_tensor_slices(x_train)
 dataset = dataset.shuffle(buffer_size=1024).batch(const.BATCH_SIZE)
 
-diffmodel = ddim.DDIM(const.IMAGE_DIM, image_channel, const.WIDTHS, const.BLOCK_DEPTH)
+# Define diffusion model
+diffmodel = ddim.create_model(const.IMAGE_DIM, image_channel, const.WIDTHS, const.BLOCK_DEPTH)
 
-diffmodel.summary(expand_nested=True)
-
-loss_fn = keras.losses.MeanAbsoluteError()
-diffmodel.compile(
-    optimizer=keras.optimizers.AdamW(
-        learning_rate=const.LEARNING_RATE, weight_decay=const.WEIGHT_DECAY
-    ),
-    loss=loss_fn,
-)
-
+# Compute normalization statistics
 diffmodel.normalizer.adapt(dataset)
-
-# run training and plot generated images periodically
-current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
 # Check if MODEL_DIR exists, create if not
 if not os.path.exists(const.MODEL_DIR):
     os.makedirs(const.MODEL_DIR)
 
+# Create callbacks for saving model and display samples
+current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 checkpoint_dir = os.path.join(const.MODEL_DIR, f"ddim-cifar10-keras-{current_time}")
 
 if not os.path.exists(checkpoint_dir):
@@ -58,12 +52,17 @@ display_callback = ddim.DisplayCallback(
     checkpoint_dir=checkpoint_dir,
 )
 
-checkpoint_path = os.path.join(checkpoint_dir, "model.keras")
+# checkpoint_path = os.path.join(checkpoint_dir, "model.keras")
+checkpoint_path = os.path.join(checkpoint_dir, "ddim_model.weights.h5")
 checkpoint_callback = keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_path,
-    save_freq="epoch"
+    save_freq="epoch",
+    save_weights_only=True,
 )
+# Build the model by specifying the input shape
+diffmodel.build(input_shape=(None, const.IMAGE_DIM, const.IMAGE_DIM, const.IMAGE_CHANNEL))
 
+# Train the model
 diffmodel.fit(
     dataset,
     epochs=const.NUM_EPOCHS,

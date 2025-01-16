@@ -21,7 +21,62 @@ def normalize_batch(X_batch, low_s=0, high_s=255, low_t=-1, high_t=1):
     Xn = Xn * (high_t - low_t) + low_t
     return Xn
 
-def visualize_grid(X, figpath=None, vmin=-1, vmax=1, suptitle=None):
+def visualize_imgrid(img_list, title="Untitled", figpath=None, plot_dim=None):
+    """
+    Visualize a list of images in a grid
+
+    Args:
+        - img_list: list[np.ndarray], list of images
+        - title: str, title of the plot
+        - figpath: str, path to save the figure (if None, show the plot)
+        - plot_dim: tuple, dimension of the plot (if None, use the square root of the number of images
+
+    """
+    # plt.figure(figsize=(6, 6))
+    # plt.figure(figsize=(6, 6)).suptitle(title, fontsize=18)
+
+    n_samples = len(img_list)
+    
+    if plot_dim is None:
+        # decide subplot dimensions
+        d = np.sqrt(n_samples)
+        d = np.ceil(d).astype("uint8")
+        dx = dy = d
+    else:
+        dx, dy = plot_dim
+
+    plt.title(title)
+    plt.axis("off")
+
+    for i in range(n_samples):
+        ax = plt.subplot(dx, dy, i + 1)
+        ax.axis("off")
+
+        img = img_list[i]
+    
+        print(f"[visualize_imgrid] img shape: {img.shape}")
+        vmin = np.min(img)
+        vmax = np.max(img)
+        print(vmin, vmax)
+        
+        plt.imshow(img, vmin=vmin, vmax=vmax)
+    
+    if figpath is not None:
+        plt.savefig(figpath)
+    else:
+        plt.show()
+
+def visualize_grid(X, figpath=None, suptitle=None):
+    """
+    Visualizes a grid of images.
+
+    Args:
+        X (numpy.ndarray): A batch of images to be visualized.
+        figpath (str, optional): Path to save the figure. If None, the figure is shown instead. Default is None.
+        vmin (int, optional): Minimum value for normalization. Default is -1.
+        vmax (int, optional): Maximum value for normalization. Default is 1.
+        suptitle (str, optional): Super title for the figure. Default is None.
+    """
     fig = plt.figure(figsize=(6, 6))
     if suptitle is not None:
         fig.suptitle(suptitle)
@@ -38,11 +93,15 @@ def visualize_grid(X, figpath=None, vmin=-1, vmax=1, suptitle=None):
         axes_pad=0.05, # pad between axes in inch.
     )
 
-    Xn = normalize_batch(
-        X, low_s=np.min(X), high_s=np.max(X), low_t=0, high_t=1
-    )
-    for ax, im in zip(grid, Xn):
-        ax.imshow(im)
+    # Xn = normalize_batch(
+    #     X, low_s=np.min(X), high_s=np.max(X), low_t=0, high_t=1
+    # )
+    # for ax, im in zip(grid, Xn):
+    #     ax.imshow(im)
+    #     ax.axis("off")
+    
+    for ax, im in zip(grid, X):
+        ax.imshow(im, vmin=np.min(X), vmax=np.max(X))
         ax.axis("off")
     
     if figpath is not None:
