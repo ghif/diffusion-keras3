@@ -117,7 +117,7 @@ forward_steps = 5
 noises = keras.random.normal(shape=(batch_size, image_size, image_size, image_ch))
 noisy_images_list = forward_diffusion(diffmodel, image, noises, steps=forward_steps)
 figpath = os.path.join("images", "forward_diffusion.png")
-U.visualize_imgrid(noisy_images_list, title="Forward Diffusion", plot_dim=(1, forward_steps+1), figpath=figpath)
+U.visualize_imgrid(noisy_images_list, title=f"Forward Diffusion (steps: {forward_steps})", plot_dim=(1, forward_steps+1), figpath=figpath)
 
 # Reverse diffusion
 print(f"Reverse diffusion ...")
@@ -125,4 +125,4 @@ reverse_steps = 11
 initial_noise = keras.random.normal(shape=(1, image_size, image_size, image_ch))
 pred_images_list = reverse_diffusion(diffmodel, initial_noise, reverse_steps)
 figpath = os.path.join("images", "reverse_diffusion.png")
-U.visualize_imgrid(pred_images_list, title="Reverse Diffusion", figpath=figpath)
+U.visualize_imgrid(pred_images_list, title=f"Reverse Diffusion (steps: {reverse_steps})", figpath=figpath)
