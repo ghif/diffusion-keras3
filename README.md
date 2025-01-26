@@ -50,12 +50,12 @@ python inference.py
 
 
 ## Project Structure
-`architectures.py` - U-Net backbone implementation
-`constants.py` - Model and training configuration
-`ddim.py` - Core DDIM model implementation
-`training.py` - Training pipeline
-`inference.py` - Image generation pipeline
-`utils.py` - Visualization and helper utilities
+- `architectures.py` - U-Net backbone implementation
+- `constants.py` - Model and training configuration
+- `ddim.py` - Core DDIM model implementation
+- `training.py` - Training pipeline
+- `inference.py` - Image generation pipeline
+- `utils.py` - Visualization and helper utilities
 
 ## Configuration
 Key parameters can be configured in `constants.py`:
