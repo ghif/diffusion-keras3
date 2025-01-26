@@ -2,6 +2,8 @@
 
 This repository implements Denoising Diffusion Implicit Models (DDIM) using Keras. The implementation includes a complete training and inference pipeline for generating images using the CIFAR-10 dataset.
 
+![Training Process](images/train.gif)
+
 ## Overview
 
 The project implements:
