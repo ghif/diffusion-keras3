@@ -55,10 +55,13 @@ class DDIM(keras.Model):
         """
         super().__init__()
         self.normalizer = keras.layers.Normalization()
+
+        # Define the main network (for training)
         self.network = arch.create_unet(image_size, image_channel, widths, block_depth)
 
-        # Exponential moving average network for smoother sampling
-        self.ema_network = arch.create_unet(image_size, image_channel, widths, block_depth)
+        # Exponential moving average network for smoother sampling (for inference)
+        self.ema_network = keras.models.clone_model(self.network)
+        self.ema_network.set_weights(self.network.get_weights())
     
     def compile(self, **kwargs):
         super().compile(**kwargs)
@@ -208,8 +211,7 @@ class DDIM(keras.Model):
         image_ch = ops.shape(images)[-1]
 
         images = self.normalizer(images, training=True)
-        noises = keras.random.normal(shape=(batch_size, image_size, image_size, image_ch))
-
+        
         # sample uniform random diffusion times
         diffusion_times = keras.random.uniform(
             shape=(batch_size, 1, 1, 1), minval=0.0, maxval=1.0
@@ -217,25 +219,30 @@ class DDIM(keras.Model):
 
         noise_rates, signal_rates = self.diffusion_schedule(diffusion_times, const.MIN_SIGNAL_RATE, const.MAX_SIGNAL_RATE)
 
-        # mix the images with noises accordingly
+        noises = keras.random.normal(shape=(batch_size, image_size, image_size, image_ch))
+
+        # mix the images with noises accordingly (1-step forward diffusion)
         noisy_images = signal_rates * images + noise_rates * noises
 
         with tf.GradientTape() as tape:
-            # train the network to separate noisy images to their components
+            # denoising (1-step reverse diffusion)
             pred_noises, pred_images = self.denoise(
                 noisy_images, noise_rates, signal_rates, training=True
             )
 
+            # compute the loss function
             noise_loss = self.loss(noises, pred_noises) # used for training
             # image_loss = self.loss(images, pred_images) # only used as metric
 
+        # apply the gradient updates
         gradients = tape.gradient(noise_loss, self.network.trainable_weights)
         self.optimizer.apply_gradients(zip(gradients, self.network.trainable_weights))
 
+        # store the loss values to the trackers
         self.noise_loss_tracker.update_state(noises, pred_noises)
         self.image_loss_tracker.update_state(images, pred_images)
 
-        # track the exponential moving average of the network weights
+        # regularization: track the exponential moving average of the network weights
         for weight, ema_weights in zip(self.network.weights, self.ema_network.weights):
             ema_weights.assign(const.EMA * ema_weights + (1-const.EMA) * weight)
 

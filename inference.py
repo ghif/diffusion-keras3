@@ -11,6 +11,8 @@ import os
 def forward_diffusion(diffmodel, xo, noises, steps=5):
     """
     Perform the forward diffusion process on the input image.
+    q(x_t | x_0) = \sqrt(\bar{\alpha}_t) * x_0 + \sqrt(1 - \bar{\alpha}_t) * \epsilon
+
     Args:
         diffmodel: The diffusion model object that contains the diffusion schedule and normalization methods.
         xo: The original input image.
@@ -44,6 +46,7 @@ def forward_diffusion(diffmodel, xo, noises, steps=5):
 def reverse_diffusion(diffmodel, initial_noise, steps=5):
     """
     Perform reverse diffusion process to generate images from initial noise.
+
     Args:
         diffmodel (object): The diffusion model used for denoising and scheduling.
         initial_noise (numpy.ndarray): The initial noise tensor to start the reverse diffusion process.
@@ -110,19 +113,21 @@ checkpoint_path = os.path.join(checkpoint_dir, "ddim_model.weights.h5")
 print(f"Load model from checkpoint: {checkpoint_path}")
 diffmodel.load_weights(checkpoint_path)
 
-# Forwrad diffusion
-print(f"Forward diffusion ...")
-image = x_batch[11]
-forward_steps = 5
-noises = keras.random.normal(shape=(batch_size, image_size, image_size, image_ch))
-noisy_images_list = forward_diffusion(diffmodel, image, noises, steps=forward_steps)
-figpath = os.path.join("images", "forward_diffusion.png")
-U.visualize_imgrid(noisy_images_list, title=f"Forward Diffusion (steps: {forward_steps})", plot_dim=(1, forward_steps+1), figpath=figpath)
+# # Forwrad diffusion
+# print(f"Forward diffusion ...")
+# image = x_batch[11]
+# forward_steps = 5
+# noises = keras.random.normal(shape=(batch_size, image_size, image_size, image_ch))
+# noisy_images_list = forward_diffusion(diffmodel, image, noises, steps=forward_steps)
+# # figpath = os.path.join("images", "forward_diffusion.png")
+# figpath = None
+# U.visualize_imgrid(noisy_images_list, title=f"Forward Diffusion (steps: {forward_steps})", plot_dim=(1, forward_steps+1), figpath=figpath)
 
 # Reverse diffusion
 print(f"Reverse diffusion ...")
-reverse_steps = 11
+reverse_steps = 10
 initial_noise = keras.random.normal(shape=(1, image_size, image_size, image_ch))
 pred_images_list = reverse_diffusion(diffmodel, initial_noise, reverse_steps)
-figpath = os.path.join("images", "reverse_diffusion.png")
+# figpath = os.path.join("images", "reverse_diffusion.png")
+figpath = None
 U.visualize_imgrid(pred_images_list, title=f"Reverse Diffusion (steps: {reverse_steps})", figpath=figpath)
