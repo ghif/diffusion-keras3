@@ -9,7 +9,7 @@ This repository implements Denoising Diffusion Implicit Models (DDIM) using Kera
 The project implements:
 - DDIM architecture with configurable U-Net backbone
 - Forward and reverse diffusion processes
-- Training pipeline with EMA model averaging
+- Training pipeline with Exponential Moving Average (EMA) model averaging
 - Inference pipeline for image generation
 - Visualization utilities
 
