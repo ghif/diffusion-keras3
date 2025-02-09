@@ -242,7 +242,8 @@ class DDIM(keras.Model):
         self.noise_loss_tracker.update_state(noises, pred_noises)
         self.image_loss_tracker.update_state(images, pred_images)
 
-        # regularization: track the exponential moving average of the network weights
+        # regularization: track the exponential moving average (EMA) of the network weights 
+        # emg_weights are used for inference only
         for weight, ema_weights in zip(self.network.weights, self.ema_network.weights):
             ema_weights.assign(const.EMA * ema_weights + (1-const.EMA) * weight)
 

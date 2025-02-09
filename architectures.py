@@ -88,6 +88,7 @@ def create_unet(image_dim, image_channel, widths, block_depth):
 
     Args:
         image_dim (dim): The image dimension.
+        image_channel (int): The number of image channels.
         widths (list[int]): The width of each layer.
         block_depth: The depth of each block.
 
@@ -95,36 +96,43 @@ def create_unet(image_dim, image_channel, widths, block_depth):
         A U-Net model (keras.Model).
 
     """
+    # Input placeholders
     noisy_images = keras.Input(shape=(image_dim, image_dim, image_channel))
-    noise_variances = keras.Input(shape=(1, 1, 1))
+    noise_rates = keras.Input(shape=(1, 1, 1)) # noise_rates
 
-    e = keras.layers.Lambda(sinusoidal_embedding, output_shape=(1, 1, image_dim))(noise_variances)
-    e = keras.layers.UpSampling2D(size=image_dim, 
-    interpolation="nearest")(e)
-
+    # Embeddings for the images
     x = keras.layers.Conv2D(widths[0], kernel_size=1)(noisy_images)
+
+    # Embeddings for the noise rates
+    e = keras.layers.Lambda(sinusoidal_embedding, output_shape=(1, 1, image_dim))(noise_rates)
+    e = keras.layers.UpSampling2D(size=image_dim, interpolation="nearest")(e)
+
+    # Concatenate both embeddings
     x = keras.layers.Concatenate()([x, e])
 
     skips = []
+
+    # Encoder
     for width in widths[:-1]:
         x = down_block(width, block_depth)([x, skips])
     
+    # Middle / Bottleneck block
     for _ in range(block_depth):
         x = residual_block(widths[-1])(x)
 
+    # Decoder
     for width in reversed(widths[:-1]):
         x = up_block(width, block_depth)([x, skips])
     
     x = keras.layers.Conv2D(image_channel, kernel_size=1, kernel_initializer="zeros")(x)
 
-    return keras.Model(inputs=[noisy_images, noise_variances], outputs=x, name="residual_unet")
+    return keras.Model(inputs=[noisy_images, noise_rates], outputs=x, name="residual_unet")
                                                                            
     
 
 if __name__ == "__main__":
-    
     # # Test sinusoidal embedding
-    # x = np.linspace(0, 1, 1000).reshape(-1, 1, 1, 1)
+    # x = np.linspace(0, 1, 10).reshape(-1, 1, 1, 1)
     # embeddings = sinusoidal_embedding(x)
     # embeddings = embeddings.numpy()
 
@@ -136,8 +144,8 @@ if __name__ == "__main__":
     model = create_unet(const.IMAGE_DIM, 3, const.WIDTHS, const.BLOCK_DEPTH)
     print(model.summary())
 
-    # Inference with unet model
-    n_samples = 1000
-    noisy_images = np.random.rand(n_samples, const.IMAGE_DIM, const.IMAGE_DIM, 3)
-    noise_variances = np.random.rand(n_samples, 1, 1, 1)
-    denoised_images = model.predict([noisy_images, noise_variances])
+    # # Inference with unet model
+    # n_samples = 1000
+    # noisy_images = np.random.rand(n_samples, const.IMAGE_DIM, const.IMAGE_DIM, 3)
+    # noise_rates = np.random.rand(n_samples, 1, 1, 1)
+    # denoised_images = model.predict([noisy_images, noise_rates])
