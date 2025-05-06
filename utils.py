@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import ImageGrid
+from PIL import Image
 
 def normalize_batch(X_batch, low_s=0, high_s=255, low_t=-1, high_t=1):
     """
@@ -106,3 +107,32 @@ def visualize_grid(X, figpath=None, suptitle=None):
         plt.savefig(figpath)
     else:
         plt.show()
+
+
+def display_generated_images(images):
+    """Helper function to display the images from the inputs.
+
+    This function accepts the following input formats:
+    - 3D numpy array.
+    - 4D numpy array: concatenated horizontally.
+    - List of 3D numpy arrays: concatenated horizontally.
+    """
+    display_image = None
+    if isinstance(images, np.ndarray):
+        if images.ndim == 3:
+            display_image = Image.fromarray(images)
+        elif images.ndim == 4:
+            concated_images = np.concatenate(list(images), axis=1)
+            display_image = Image.fromarray(concated_images)
+    elif isinstance(images, list):
+        concated_images = np.concatenate(images, axis=1)
+        display_image = Image.fromarray(concated_images)
+
+    if display_image is None:
+        raise ValueError("Unsupported input format.")
+
+    plt.figure(figsize=(10, 10))
+    plt.axis("off")
+    plt.imshow(display_image)
+    plt.show()
+    plt.close()
