@@ -108,26 +108,30 @@ image_ch = ops.shape(x_batch)[-1]
 diffmodel = ddim.create_model(const.IMAGE_DIM, image_channel, const.WIDTHS, const.BLOCK_DEPTH)
 diffmodel.normalizer.adapt(dataset)
 diffmodel.build(input_shape=(None, const.IMAGE_DIM, const.IMAGE_DIM, const.IMAGE_CHANNEL))
+
 checkpoint_dir = os.path.join(const.MODEL_DIR, f"ddim-cifar10-keras-best")
 checkpoint_path = os.path.join(checkpoint_dir, "ddim_model.weights.h5")
 print(f"Load model from checkpoint: {checkpoint_path}")
 diffmodel.load_weights(checkpoint_path)
 
-# # Forwrad diffusion
-# print(f"Forward diffusion ...")
-# image = x_batch[11]
-# forward_steps = 5
-# noises = keras.random.normal(shape=(batch_size, image_size, image_size, image_ch))
-# noisy_images_list = forward_diffusion(diffmodel, image, noises, steps=forward_steps)
-# # figpath = os.path.join("images", "forward_diffusion.png")
+
+
+# Forwrad diffusion
+print(f"Forward diffusion ...")
+image = x_batch[9]
+forward_steps = 10
+noises = keras.random.normal(shape=(batch_size, image_size, image_size, image_ch))
+noisy_images_list = forward_diffusion(diffmodel, image, noises, steps=forward_steps)
+# figpath = os.path.join("images", "forward_diffusion.png")
 # figpath = None
 # U.visualize_imgrid(noisy_images_list, title=f"Forward Diffusion (steps: {forward_steps})", plot_dim=(1, forward_steps+1), figpath=figpath)
+U.create_animated_gif(noisy_images_list, output_gif_path="images/animated_forward_diffusion_9.gif")
 
-# Reverse diffusion
-print(f"Reverse diffusion ...")
-reverse_steps = 10
-initial_noise = keras.random.normal(shape=(1, image_size, image_size, image_ch))
-pred_images_list = reverse_diffusion(diffmodel, initial_noise, reverse_steps)
-# figpath = os.path.join("images", "reverse_diffusion.png")
-figpath = None
-U.visualize_imgrid(pred_images_list, title=f"Reverse Diffusion (steps: {reverse_steps})", figpath=figpath)
+# # Reverse diffusion
+# print(f"Reverse diffusion ...")
+# reverse_steps = 10
+# initial_noise = keras.random.normal(shape=(1, image_size, image_size, image_ch))
+# pred_images_list = reverse_diffusion(diffmodel, initial_noise, reverse_steps)
+# # figpath = os.path.join("images", "reverse_diffusion.png")
+# figpath = None
+# U.visualize_imgrid(pred_images_list, title=f"Reverse Diffusion (steps: {reverse_steps})", figpath=figpath)

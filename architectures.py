@@ -85,7 +85,6 @@ def up_block(width, block_depth):
 def create_unet(image_dim, image_channel, widths, block_depth):
     """
     Create a U-Net architecture with the given parameters.
-
     Args:
         image_dim (dim): The image dimension.
         image_channel (int): The number of image channels.
@@ -94,7 +93,6 @@ def create_unet(image_dim, image_channel, widths, block_depth):
 
     Returns:
         A U-Net model (keras.Model).
-
     """
     # Input placeholders
     noisy_images = keras.Input(shape=(image_dim, image_dim, image_channel))
@@ -142,8 +140,8 @@ if __name__ == "__main__":
 
     # Test U-Net
     model = create_unet(const.IMAGE_DIM, 3, const.WIDTHS, const.BLOCK_DEPTH)
-    print(model.summary())
-
+    print(model.summary(expand_nested=True))
+    keras.utils.plot_model(model, to_file="diff_arch.png", expand_nested=True, show_shapes=True)
     # # Inference with unet model
     # n_samples = 1000
     # noisy_images = np.random.rand(n_samples, const.IMAGE_DIM, const.IMAGE_DIM, 3)

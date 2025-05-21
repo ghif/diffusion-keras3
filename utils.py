@@ -136,3 +136,28 @@ def display_generated_images(images):
     plt.imshow(display_image)
     plt.show()
     plt.close()
+
+def create_animated_gif(img_list, output_gif_path="images/animated_forward_diffusion.gif"):
+    """
+    Create an animated GIF from a list of images.
+    Args:
+        img_list (list): List of images to be included in the GIF (float32 ranged from 0 to 1).
+    """
+    pil_images = []
+    for img_in in img_list:
+        # Convert the image to uint8 format
+        img_array = np.clip(img_in, 0.0, 1.0)
+        img_uint8 = (img_array * 255).astype(np.uint8)
+        pil_images.append(Image.fromarray(img_uint8))
+
+    if pil_images:
+        pil_images[0].save(
+            output_gif_path,
+            save_all=True,
+            append_images=pil_images[1:], # Append the rest of the images
+            duration=300,# Duration for each frame in milliseconds
+            loop=0, # Loop indefinitely (0 means loop forever)
+        )
+        print(f"Animated GIF saved at {output_gif_path}")
+    else:
+        print("The list of images is empty. No GIF created.")
