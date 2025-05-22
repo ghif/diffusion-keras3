@@ -115,6 +115,7 @@ To launch the Gradio UI for generating images from text prompts:
 ```bash
 python ui_text2img.py
 ```
+![UI Text to Image](images/ui_text2img.png)
 
 #### Image-to-Image
 To launch the Gradio UI for applying styles to an input image based on a text prompt:
@@ -122,7 +123,7 @@ To launch the Gradio UI for applying styles to an input image based on a text pr
 ```bash
 python ui_img2img.py
 ```
-
+![UI Image to Image](images/ui_img2img.png)
 
 ## Project Structure
 - `architectures.py` - U-Net backbone implementation for DDIM
