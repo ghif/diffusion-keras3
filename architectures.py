@@ -132,18 +132,16 @@ if __name__ == "__main__":
     # # Test sinusoidal embedding
     # x = np.linspace(0, 1, 10).reshape(-1, 1, 1, 1)
     # embeddings = sinusoidal_embedding(x)
-    # embeddings = embeddings.numpy()
+    # # embeddings = embeddings.numpy()
 
-    # for i in range(const.EMBEDDING_DIMS):
-    #     plt.plot(x[:, 0, 0, 0], embeddings[:, 0, 0, i])
-    # plt.show()
 
     # Test U-Net
     model = create_unet(const.IMAGE_DIM, 3, const.WIDTHS, const.BLOCK_DEPTH)
     print(model.summary(expand_nested=True))
     keras.utils.plot_model(model, to_file="diff_arch.png", expand_nested=True, show_shapes=True)
-    # # Inference with unet model
-    # n_samples = 1000
-    # noisy_images = np.random.rand(n_samples, const.IMAGE_DIM, const.IMAGE_DIM, 3)
-    # noise_rates = np.random.rand(n_samples, 1, 1, 1)
-    # denoised_images = model.predict([noisy_images, noise_rates])
+
+    # Inference with unet model
+    n_samples = 1000
+    noisy_images = np.random.rand(n_samples, const.IMAGE_DIM, const.IMAGE_DIM, 3)
+    noise_rates = np.random.rand(n_samples, 1, 1, 1)
+    denoised_images = model.predict([noisy_images, noise_rates])
