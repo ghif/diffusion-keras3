@@ -36,9 +36,6 @@ This project implements and showcases:
 
 ## Setup
 
-// ...existing code...
-## Setup
-
 To set up the Python environment for this project using `venv` and install the necessary dependencies, follow these steps:
 
 1.  **Ensure Python is installed**:
