@@ -1,4 +1,4 @@
- Diffusion Models with Keras
+# Diffusion Models with Keras
 
 This repository explores Denoising Diffusion Implicit Models (DDIM) and Stable Diffusion 3 (SD3) using Keras. It features:
 1.  A complete from-scratch implementation of DDIM, including a training and inference pipeline for generating images using the CIFAR-10 dataset.
@@ -99,6 +99,9 @@ This will:
 - Load and preprocess the CIFAR-10 dataset
 - Train the diffusion model for the configured number of epochs
 - Save model checkpoints and generated samples during training
+
+You can also run the training through Colab notebook: 
+<a href="https://colab.research.google.com/github/ghif/diffusion-keras3/blob/main/training_ddim.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a> 
 
 ### Inferencing
 Generate new images using your trained model:
